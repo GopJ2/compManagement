@@ -7,11 +7,7 @@ export class AppService {
   constructor(private prismaService: PrismaService) {
   }
 
-  getHello(): string {
-
-    let users = this.prismaService.user.findMany() ?? ['KEKOVSTVO'];
-    console.log(users);
-
-    return 'Hello World! sdsf';
+  getHello(): any {
+    return this.prismaService.user.findMany() ?? ['KEKOVSTVO'];
   }
 }
