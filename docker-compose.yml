@@ -1,29 +1,63 @@
-version: '3.8'
+version: '3'
 services:
-  nest-api:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    container_name: nest-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - api
+  nestjs:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: nest-api
-    restart: always
+      dockerfile: ./Dockerfile
+    image: tusharchy/nest-and-postgres-application:latest
+    environment:
+      - DB_TYPE=${DB_TYPE}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASS=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_SYNC=false
+      - JWT_SECRET=${JWT_SECRET}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - APP_EXPIRES=${APP_EXPIRES}
+      - APP_PORT=${APP_PORT}
     ports:
-      - 3000:3000
+      - "3000:3000" # expose-to-the-world : only-in-the-docker
+    container_name: nest-web
     depends_on:
-      - postgres
-    env_file:
-      - .env
-
-  postgres:
-    image: postgres:13
-    container_name: postgresprisma
-    restart: always
-    ports:
-      - 5432:5432
-    env_file:
-      - .env
+      - db
     volumes:
-      - postgres:/var/lib/postgresql/data
-
+      - .:/app
+      - /app/node_modules
+    networks:
+      - api
+  pgadmin:
+    image: thajeztah/pgadmin4
+    restart: always
+    container_name: nest-pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - api
 volumes:
-  postgres:
-    name: nest-prisma-docker-db
+  pgdata:
+  pgadmin-data:
+networks:
+  api:

@@ -1,24 +1,17 @@
-FROM node:14 AS builder
+# Image source
+FROM node:10-alpine
 
-# Create app directory
+# Docker working directory
 WORKDIR /app
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
-COPY prisma ./prisma/
+# Copying file into APP directory of docker
+COPY ./package.json ./package-lock.json /app/
 
-# Install app dependencies
+# Then install the NPM module
 RUN npm install
 
-COPY . .
-
-RUN npm run build
-
-FROM node:14
-
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/dist ./dist
+# Copy current directory to APP folder
+COPY . /app/
 
 EXPOSE 3000
-CMD [ "npm", "run", "start:prod" ]
+CMD ["npm", "run", "start:dev"]
